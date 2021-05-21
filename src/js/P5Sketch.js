@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import "./helpers/Globals";
 import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
+import ShuffleArray from "./functions/ShuffleArray";
 
 const P5Sketch = () => {
   const sketchRef = useRef();
@@ -31,10 +32,56 @@ const P5Sketch = () => {
 
     p.draw = () => {
       p.background(255);
+      p.pill();
       p.donut();
       p.trippleHex();
-      p.quadOct();
+      p.infinity();
       p.noLoop();
+    };
+
+
+
+    p.infinity = () => {
+      p.translate(p.width / 2, p.height / 2);
+      p.stroke(p.random(p.colourPalette));
+      p.fill(p.random(p.colourPalette));
+      p.scale(2);
+      p.strokeWeight(4);      
+      p.beginShape();
+      p.curveVertex(0, 0);
+      p.curveVertex(55, 30);
+      p.curveVertex(77.5, 0);
+      p.curveVertex(55, -30);
+      // p.curveVertex(0 - 40, 0 - 40);
+      // p.curveVertex(0 - 40, 0 - 60);
+      // p.curveVertex(0 + 40, 0 - 40);
+      // p.curveVertex(0 + 40, 0 - 60);
+      // p.curveVertex(0 - 40, 0 + 40);
+      // p.curveVertex(0 - 40, 0 + 60);
+      // p.curveVertex(0 + 40, 0 + 40);
+      // p.curveVertex(0 + 40, 0 + 60);
+      
+      p.curveVertex(0, 0);
+      p.curveVertex(-55, 30);
+      p.curveVertex(-77.5, 0);
+      p.curveVertex(-55, -30);
+      p.curveVertex(0, 0);
+      p.endShape(p.CLOSE);
+      p.translate(-p.width / 2, -p.height / 2);
+    };
+
+    p.pill = () => {
+      p.translate(p.width / 4 * 3, p.height / 4 * 3);
+      const colours = ShuffleArray(p.colourPalette);
+      let size = p.width / 10;
+      let distanceMultiplier = size/colours.length;
+      for (let i = 0; i < colours.length; i++) {
+        p.stroke(colours[i]);
+        p.fill(colours[i]);
+        p.rect(i * distanceMultiplier/4, i * distanceMultiplier/2, size/2, size, 20, 20);
+        size = size - distanceMultiplier; 
+      }
+      p.translate(-p.width / 4 * 3, -p.height / 4 * 3);
     };
 
     p.donut = () => {
@@ -48,24 +95,15 @@ const P5Sketch = () => {
     };
 
     p.trippleHex = () => {
-      p.translate(p.width / 2, p.height / 2);
+      p.translate(p.width / 4 * 3, p.height / 4); 
       let size = p.width / 10;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
+        p.stroke(p.random(p.colourPalette));
         p.fill(p.random(p.colourPalette));
         p.hexagon(0, 0, size);
         size = size / 2;
       }
-      p.translate(-p.width / 2, -p.height / 2);
-    };
-
-    p.quadOct = () => {
-      p.translate(p.width / 2, p.height / 4);
-      let size = p.width / 10;
-      for (let i = 0; i < 4; i++) {
-        p.fill(p.random(p.colourPalette));
-        p.octagon(0, 0, size);
-        size = size / 2;
-      }
+      p.translate(-p.width / 4 * 3, -p.height / 4);
     };
 
     /*
@@ -81,26 +119,6 @@ const P5Sketch = () => {
       const angle = p.TWO_PI / 6;
       p.beginShape();
       for (var a = p.TWO_PI / 12; a < p.TWO_PI + p.TWO_PI / 12; a += angle) {
-        let sx = x + p.cos(a) * radius;
-        let sy = y + p.sin(a) * radius;
-        p.vertex(sx, sy);
-      }
-      p.endShape(p.CLOSE);
-    };
-
-    /*
-     * function to draw a octagon shape
-     * adapted from: https://p5js.org/examples/form-regular-polygon.html
-     * @param {Number} x        - x-coordinate of the octagon
-     * @param {Number} y      - y-coordinate of the octagon
-     * @param {Number} radius   - radius of the octagon
-     */
-    p.octagon = (x, y, radius) => {
-      radius = radius / 2;
-      p.angleMode(p.RADIANS);
-      const angle = p.TWO_PI / 8;
-      p.beginShape();
-      for (var a = p.TWO_PI / 16; a < p.TWO_PI + p.TWO_PI / 16; a += angle) {
         let sx = x + p.cos(a) * radius;
         let sy = y + p.sin(a) * radius;
         p.vertex(sx, sy);
