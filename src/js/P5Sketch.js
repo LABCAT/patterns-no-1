@@ -3,6 +3,8 @@ import "./helpers/Globals";
 import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
 import ShuffleArray from "./functions/ShuffleArray";
+import audio from "../audio/patterns-no-1.ogg";
+import cueSet1 from "./cueSet1.js";
 
 const P5Sketch = () => {
   const sketchRef = useRef();
@@ -28,14 +30,43 @@ const P5Sketch = () => {
 
     p.colourPalette = ["#1f2041","#4b3f72","#ffc857","#119da4","#19647e","#007991","#439a86","#a1b5d8"];
 
+    p.cueSet1Completed = [];
+
+    p.cueSet2Completed = [];
+
+    p.preload = () => {
+        p.song = p.loadSound(audio);
+    };
 
     p.setup = () => {
       p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
       p.colorMode(p.HSB, 360, 100, 100, 100);
       p.noLoop();
+
+      for (let i = 0; i < cueSet1.length; i++) {
+          let vars = {
+              'currentCue': (i + 1),
+              'duration': cueSet1[i].duration,
+              'midi': cueSet1[i].midi,
+              'time': cueSet1[i].time,
+          }
+          p.song.addCue(cueSet1[i].time, p.executeCueSet1, vars);
+      }
     };
 
     p.draw = () => {
+
+    }
+
+    p.executeCueSet1 = (vars) => {
+        const currentCue = vars.currentCue;
+        if (!p.cueSet1Completed.includes(currentCue)) {
+            p.cueSet1Completed.push(currentCue);
+            p.drawPattern();
+        }
+    };
+
+    p.drawPattern = () => {
       p.background(255);
       for(let i=0; i < 2000; i++){
           let x = p.randomGaussian(0.5, 0.14) * p.width;
@@ -44,6 +75,7 @@ const P5Sketch = () => {
           p.randomShape(x, y, w);
       }
     };
+
 
     p.randomShape = (x, y, w) => {
       const probability = parseInt(p.random(200));
@@ -148,6 +180,39 @@ const P5Sketch = () => {
       }
       p.endShape(p.CLOSE);
     };
+
+    p.mousePressed = () => {
+      if (p.song.isPlaying()) {
+            p.song.pause();
+      } else {
+          if (parseInt(p.song.currentTime()) >= parseInt(p.song.buffer.duration)) {
+              p.reset();
+          }
+          //document.getElementById("play-icon").classList.add("fade-out");
+          p.canvas.addClass("fade-in");
+          p.song.play();
+      }
+    };
+
+  p.creditsLogged = false;
+
+    p.logCredits = () => {
+        if (
+            !p.creditsLogged &&
+            parseInt(p.song.currentTime()) >= parseInt(p.song.buffer.duration)
+        ) {
+            p.creditsLogged = true;
+            console.log(
+            "Music: http://labcat.nz/",
+            "\n",
+            "Animation: https://github.com/LABCAT/cubes-no-1"
+            );
+        }
+    };
+
+    p.reset = () => {
+            
+    }
 
     p.updateCanvasDimensions = () => {
       p.canvasWidth = window.innerWidth;
