@@ -3,18 +3,27 @@ import "./helpers/Globals";
 import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
 import ShuffleArray from "./functions/ShuffleArray";
+import InfinitySymbol from "./InfinitySymbol";
 import audio from "../audio/patterns-no-1.ogg";
 import cueSet1 from "./cueSet1.js";
+import cueSet2 from "./cueSet2.js";
 
 const P5Sketch = () => {
   const sketchRef = useRef();
 
   const Sketch = (p) => {
+    
     p.canvas = null;
 
     p.canvasWidth = window.innerWidth;
 
     p.canvasHeight = window.innerHeight;
+
+    p.song = null;
+
+    p.tempo = 105;
+
+    p.barAsSeconds = Math.floor(((60 / p.tempo) * 4) * 10000) / 10000;
 
     //https://coolors.co/0b3954-087e8b-64abbb-bfd7ea-df99a5-ff5a5f-e43c42-c81d25
     // p.colourPalette = [
@@ -52,51 +61,94 @@ const P5Sketch = () => {
           }
           p.song.addCue(cueSet1[i].time, p.executeCueSet1, vars);
       }
+
+      for (let i = 0; i < cueSet2.length; i++) {
+          let vars = {
+              'currentCue': (i + 1),
+              'duration': cueSet2[i].duration,
+              'midi': cueSet2[i].midi,
+              'time': cueSet2[i].time,
+          }
+          p.song.addCue(cueSet2[i].time, p.executeCueSet2, vars);
+      }
     };
 
     p.draw = () => {
 
     }
 
+    p.canReset = true;
+
+    p.linesToDrawPerCue = 256;
+
     p.executeCueSet1 = (vars) => {
+      const currentCue = vars.currentCue;
+      if (!p.cueSet1Completed.includes(currentCue)) {
+          if(vars.time > p.barAsSeconds * 16 && p.canReset){
+            p.background(255);
+            p.canReset = false;
+            p.linesToDrawPerCue = 512;
+          }
+          p.cueSet1Completed.push(currentCue);
+          for(let i=0; i < p.linesToDrawPerCue; i++){
+              const w = p.random(10, 100) * p.random(p.random(p.random()));
+              p.translateAndRotate();
+              p.randomLine(w);
+              p.pop();
+          }
+      }
+    };
+
+    p.executeCueSet2 = (vars) => {
         const currentCue = vars.currentCue;
-        if (!p.cueSet1Completed.includes(currentCue)) {
-            p.cueSet1Completed.push(currentCue);
-            p.drawPattern();
+        if (!p.cueSet2Completed.includes(currentCue)) {
+            p.cueSet2Completed.push(currentCue);
+            p.translateAndRotate();
+            const maxSize = currentCue > 128 ? p.width : p.width / 128 * currentCue;
+            const size = p.random(maxSize / 32);
+            p.trippleHex(size);  
+            // const size = p.random(1, 5);
+            // const colours = ShuffleArray(p.colourPalette);
+            // const symbol = new InfinitySymbol(p, size, size, colours[0], colours[colours.length - 1]);    
+            // symbol.draw();
+            p.pop();
         }
     };
 
+    p.translateAndRotate = () => {
+      const x = p.randomGaussian(0.5, 0.14) * p.width;
+      const y = p.randomGaussian(0.5, 0.14) * p.height;
+      const angle = (parseInt(p.random(8)) * (p.TAU/8))-p.PI*0.05;
+      p.push();
+      p.translate(x, y);
+      p.rotate(angle);
+    }
+
     p.drawPattern = () => {
-      p.background(255);
-      for(let i=0; i < 2000; i++){
-          let x = p.randomGaussian(0.5, 0.14) * p.width;
-          let y = p.randomGaussian(0.5, 0.14) * p.height;
-          let w = p.random(10, 100) * p.random(p.random(p.random()));
-          p.randomShape(x, y, w);
+      
+      for(let i=0; i < 200; i++){
+          const w = p.random(10, 100) * p.random(p.random(p.random()));
+          p.translateAndRotate();
+          p.randomShape(w);
       }
     };
 
 
-    p.randomShape = (x, y, w) => {
+    p.randomShape = (w) => {
       const probability = parseInt(p.random(200));
-      const angle = (parseInt(p.random(8)) * (p.TAU/8))-p.PI*0.05;
-      const shape = p.random(p.shapes);
       let size = 0;
-      p.push();
-      p.translate(x, y);
-      p.rotate(angle);
       switch (probability) {
         case 0:
           size = p.random(1, 5);
-          p.infinitySymbol(size, size);    
+          //p.infinitySymbol(size, size);    
           break;
         case 1:
           size = p.random(p.width / 16);
-          p.leaf(size);    
+          //p.leaf(size);    
           break;
         case 2:
           size = p.random(p.width / 16);
-          p.trippleHex(size);    
+          //p.trippleHex(size);    
           break;
         default:
           p.randomLine(w);
@@ -123,7 +175,7 @@ const P5Sketch = () => {
       p.fill(fillC);
       p.strokeWeight(8);      
       p.beginShape();
-      p.curveVertex(centerX, centerY);
+      p.curveVertex(0, 0);
       p.curveVertex(centerX, centerY);
       p.curveVertex(6 * rightSize, 4 * rightSize);
       p.curveVertex(9 * rightSize, 3 * rightSize);
