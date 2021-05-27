@@ -1,19 +1,28 @@
 export default class InfinitySymbol {
 
-    constructor(p5, leftSize, rightSize, fillColour, strokeColour) {
+    constructor(p5, x, y, leftSize, rightSize, alpha, strokeColour, fillColour = 0) {
         this.p = p5;
+        this.x = x;
+        this.y = y;
         this.leftSize = leftSize;
         this.rightSize = rightSize;
-        this.fill = this.p.color(fillColour);
-        this.fill.setAlpha(this.p.random(50, 400));
+        this.alpha = alpha;
+        this.fill = this.fill > 0 ?? this.p.color(fillColour);
         this.stroke = this.p.color(strokeColour);
-        this.stroke.setAlpha(this.p.random(50, 400));
+        this.stroke.setAlpha(this.alpha);
     }
 
     draw() {
-        this.p.strokeWeight(8);
+        const angle = (parseInt(this.p.random(8)) * (this.p.TAU/8))-this.p.PI*0.05;
+        this.p.push();
+        this.p.translate(this.x, this.y);
+        this.p.rotate(angle);
+        this.p.strokeWeight(1);
         this.p.stroke(this.stroke);
-        this.p.fill(this.fill);
+        if(this.fill){
+            this.fill.setAlpha(this.alpha);
+            this.p.fill(this.fill);
+        }
         this.p.beginShape();
         this.p.curveVertex(0, 0);
         this.p.curveVertex(0, 0);
@@ -30,6 +39,7 @@ export default class InfinitySymbol {
         this.p.curveVertex(-6  * this.leftSize, -4 * this.leftSize);
         this.p.curveVertex(0, 0);
         this.p.endShape(this.p.CLOSE);
+        this.p.pop();
     }
 
     update() {

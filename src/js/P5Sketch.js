@@ -7,6 +7,7 @@ import InfinitySymbol from "./InfinitySymbol";
 import audio from "../audio/patterns-no-1.ogg";
 import cueSet1 from "./cueSet1.js";
 import cueSet2 from "./cueSet2.js";
+import cueSet3 from "./cueSet3.js";
 
 const P5Sketch = () => {
   const sketchRef = useRef();
@@ -25,23 +26,13 @@ const P5Sketch = () => {
 
     p.barAsSeconds = Math.floor(((60 / p.tempo) * 4) * 10000) / 10000;
 
-    //https://coolors.co/0b3954-087e8b-64abbb-bfd7ea-df99a5-ff5a5f-e43c42-c81d25
-    // p.colourPalette = [
-    //   "#0b3954",
-    //   "#087e8b",
-    //   "#64abbb",
-    //   "#bfd7ea",
-    //   "#df99a5",
-    //   "#ff5a5f",
-    //   "#e43c42",
-    //   "#c81d25",
-    // ];
-
     p.colourPalette = ["#1f2041","#4b3f72","#ffc857","#119da4","#19647e","#007991","#439a86","#a1b5d8"];
 
     p.cueSet1Completed = [];
 
     p.cueSet2Completed = [];
+
+    p.cueSet3Completed = [];
 
     p.preload = () => {
         p.song = p.loadSound(audio);
@@ -50,8 +41,6 @@ const P5Sketch = () => {
     p.setup = () => {
       p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
       p.colorMode(p.HSB, 360, 100, 100, 100);
-      p.noLoop();
-
       for (let i = 0; i < cueSet1.length; i++) {
           let vars = {
               'currentCue': (i + 1),
@@ -71,10 +60,27 @@ const P5Sketch = () => {
           }
           p.song.addCue(cueSet2[i].time, p.executeCueSet2, vars);
       }
+
+      for (let i = 0; i < cueSet3.length; i++) {
+          let vars = {
+              'currentCue': (i + 1),
+              'duration': cueSet3[i].duration,
+              'midi': cueSet3[i].midi,
+              'time': cueSet3[i].time,
+          }
+          p.song.addCue(cueSet3[i].time, p.executeCueSet3, vars);
+      }
     };
 
-    p.draw = () => {
+    p.melody = [];
 
+    p.draw = () => {
+      if (p.song.isPlaying()) {
+            for (var i = 0; i < p.melody.length; i++) {
+                p.melody[i].update();
+                p.melody[i].draw();
+            }
+        }
     }
 
     p.canReset = true;
@@ -96,6 +102,18 @@ const P5Sketch = () => {
               p.randomLine(w);
               p.pop();
           }
+
+          const leftQuarter = p.random(1, p.width / 4);
+        const rightQuarter = p.random(p.width / 4 * 3, p.width);
+        const topQuarter = p.random(1, p.height / 4);
+        const bottomQuarter = p.random(p.height / 4 * 3, p.height);
+        const x = p.random([leftQuarter, rightQuarter]);
+        const y = p.random([topQuarter, bottomQuarter]);
+        const maxSize = currentCue > 64 ? p.width : p.width / 32 * currentCue;
+        const size = p.random(maxSize / 16);
+        p.translateAndRotate(x, y);
+        p.trippleHex(size);  
+        p.pop();
       }
     };
 
@@ -103,21 +121,35 @@ const P5Sketch = () => {
         const currentCue = vars.currentCue;
         if (!p.cueSet2Completed.includes(currentCue)) {
             p.cueSet2Completed.push(currentCue);
-            p.translateAndRotate();
-            const maxSize = currentCue > 128 ? p.width : p.width / 128 * currentCue;
-            const size = p.random(maxSize / 32);
-            p.trippleHex(size);  
-            // const size = p.random(1, 5);
-            // const colours = ShuffleArray(p.colourPalette);
-            // const symbol = new InfinitySymbol(p, size, size, colours[0], colours[colours.length - 1]);    
-            // symbol.draw();
-            p.pop();
+            const size = 1 + currentCue / 100;
+            const x = p.randomGaussian(0.5, 0.14) * p.width;
+            const y = p.randomGaussian(0.5, 0.14) * p.height;
+            p.melody.push(new InfinitySymbol(p, x, y, size, size, currentCue, p.random(p.colourPalette)));
+            
         }
     };
 
-    p.translateAndRotate = () => {
-      const x = p.randomGaussian(0.5, 0.14) * p.width;
-      const y = p.randomGaussian(0.5, 0.14) * p.height;
+    p.executeCueSet3 = (vars) => {
+      const currentCue = vars.currentCue;
+      if (!p.cueSet3Completed.includes(currentCue)) {
+        p.cueSet3Completed.push(currentCue);
+        const leftQuarter = p.random(1, p.width / 4);
+        const rightQuarter = p.random(p.width / 4 * 3, p.width);
+        const topQuarter = p.random(1, p.height / 4);
+        const bottomQuarter = p.random(p.height / 4 * 3, p.height);
+        const x = p.random([leftQuarter, rightQuarter]);
+        const y = p.random([topQuarter, bottomQuarter]);
+        const maxSize = currentCue > 128 ? p.width : p.width / 128 * currentCue;
+        const size = p.random(maxSize / 32);
+        // p.translateAndRotate(x, y);
+        // p.trippleHex(size);  
+        // p.pop();
+      }
+    };
+
+    p.translateAndRotate = (x = 0, y = 0) => {
+      x = x > 0 ? x : p.randomGaussian(0.5, 0.14) * p.width;
+      y = y > 0 ? y : p.randomGaussian(0.5, 0.14) * p.height;
       const angle = (parseInt(p.random(8)) * (p.TAU/8))-p.PI*0.05;
       p.push();
       p.translate(x, y);
@@ -125,37 +157,12 @@ const P5Sketch = () => {
     }
 
     p.drawPattern = () => {
-      
       for(let i=0; i < 200; i++){
           const w = p.random(10, 100) * p.random(p.random(p.random()));
           p.translateAndRotate();
           p.randomShape(w);
       }
     };
-
-
-    p.randomShape = (w) => {
-      const probability = parseInt(p.random(200));
-      let size = 0;
-      switch (probability) {
-        case 0:
-          size = p.random(1, 5);
-          //p.infinitySymbol(size, size);    
-          break;
-        case 1:
-          size = p.random(p.width / 16);
-          //p.leaf(size);    
-          break;
-        case 2:
-          size = p.random(p.width / 16);
-          //p.trippleHex(size);    
-          break;
-        default:
-          p.randomLine(w);
-          break;
-      }
-      p.pop();
-    }
 
     p.randomLine = (lenght) => {
       const colour = p.color(p.random(p.colourPalette));
