@@ -2,12 +2,10 @@ import React, { useRef, useEffect } from "react";
 import "./helpers/Globals";
 import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
-import ShuffleArray from "./functions/ShuffleArray";
 import InfinitySymbol from "./InfinitySymbol";
 import audio from "../audio/patterns-no-1.ogg";
 import cueSet1 from "./cueSet1.js";
 import cueSet2 from "./cueSet2.js";
-import cueSet3 from "./cueSet3.js";
 
 const P5Sketch = () => {
   const sketchRef = useRef();
@@ -60,16 +58,6 @@ const P5Sketch = () => {
           }
           p.song.addCue(cueSet2[i].time, p.executeCueSet2, vars);
       }
-
-      for (let i = 0; i < cueSet3.length; i++) {
-          let vars = {
-              'currentCue': (i + 1),
-              'duration': cueSet3[i].duration,
-              'midi': cueSet3[i].midi,
-              'time': cueSet3[i].time,
-          }
-          p.song.addCue(cueSet3[i].time, p.executeCueSet3, vars);
-      }
     };
 
     p.melody = [];
@@ -103,14 +91,30 @@ const P5Sketch = () => {
               p.pop();
           }
 
-          const leftQuarter = p.random(1, p.width / 4);
-        const rightQuarter = p.random(p.width / 4 * 3, p.width);
-        const topQuarter = p.random(1, p.height / 4);
-        const bottomQuarter = p.random(p.height / 4 * 3, p.height);
-        const x = p.random([leftQuarter, rightQuarter]);
-        const y = p.random([topQuarter, bottomQuarter]);
-        const maxSize = currentCue > 64 ? p.width : p.width / 32 * currentCue;
-        const size = p.random(maxSize / 16);
+        const leftQuarter = p.width / 4;
+        const rightQuarter = p.width / 4 * 3;
+        const topQuarter = p.height / 4;
+        const bottomQuarter = p.height / 4 * 3;
+        let x = p.random(1, p.width);
+        let y = p.random(1, p.height);
+        if(x > leftQuarter && x < rightQuarter && y > topQuarter && y < bottomQuarter){
+          const changeX = Math.random() < 0.5;
+          if(changeX){
+            while(x > leftQuarter && x < rightQuarter){
+              x = p.random(1, p.width)
+            }
+          }
+          else {
+            while(y > topQuarter && y < bottomQuarter){
+              y = p.random(1, p.height)
+            }
+          }
+        }
+        let maxSize = (p.width / 64 * currentCue) / 4;
+        maxSize = maxSize < p.width / 24 ? maxSize : p.width / 24;
+        console.log(currentCue);
+        console.log(maxSize);
+        const size = p.random(maxSize);
         p.translateAndRotate(x, y);
         p.trippleHex(size);  
         p.pop();
@@ -121,30 +125,12 @@ const P5Sketch = () => {
         const currentCue = vars.currentCue;
         if (!p.cueSet2Completed.includes(currentCue)) {
             p.cueSet2Completed.push(currentCue);
-            const size = 1 + currentCue / 100;
+            const size = 1 + currentCue / 50;
             const x = p.randomGaussian(0.5, 0.14) * p.width;
             const y = p.randomGaussian(0.5, 0.14) * p.height;
             p.melody.push(new InfinitySymbol(p, x, y, size, size, currentCue, p.random(p.colourPalette)));
             
         }
-    };
-
-    p.executeCueSet3 = (vars) => {
-      const currentCue = vars.currentCue;
-      if (!p.cueSet3Completed.includes(currentCue)) {
-        p.cueSet3Completed.push(currentCue);
-        const leftQuarter = p.random(1, p.width / 4);
-        const rightQuarter = p.random(p.width / 4 * 3, p.width);
-        const topQuarter = p.random(1, p.height / 4);
-        const bottomQuarter = p.random(p.height / 4 * 3, p.height);
-        const x = p.random([leftQuarter, rightQuarter]);
-        const y = p.random([topQuarter, bottomQuarter]);
-        const maxSize = currentCue > 128 ? p.width : p.width / 128 * currentCue;
-        const size = p.random(maxSize / 32);
-        // p.translateAndRotate(x, y);
-        // p.trippleHex(size);  
-        // p.pop();
-      }
     };
 
     p.translateAndRotate = (x = 0, y = 0) => {
@@ -156,59 +142,12 @@ const P5Sketch = () => {
       p.rotate(angle);
     }
 
-    p.drawPattern = () => {
-      for(let i=0; i < 200; i++){
-          const w = p.random(10, 100) * p.random(p.random(p.random()));
-          p.translateAndRotate();
-          p.randomShape(w);
-      }
-    };
-
     p.randomLine = (lenght) => {
       const colour = p.color(p.random(p.colourPalette));
       colour.setAlpha(p.random(100)*p.random(p.random()));
       p.fill(colour);
       p.stroke(colour);
       p.line(0, 0, lenght * p.random(1, 20), 0);
-    };
-
-    p.infinitySymbol = (leftSize, rightSize, centerX = 0, centerY = 0) => {
-      const colours = ShuffleArray(p.colourPalette);
-      const strokeC = p.color(colours[0]);
-      const fillC = p.color(colours[colours.length - 1]);
-      strokeC.setAlpha(p.random(50, 400));
-      fillC.setAlpha(p.random(50, 400));
-      p.stroke(strokeC);
-      p.fill(fillC);
-      p.strokeWeight(8);      
-      p.beginShape();
-      p.curveVertex(0, 0);
-      p.curveVertex(centerX, centerY);
-      p.curveVertex(6 * rightSize, 4 * rightSize);
-      p.curveVertex(9 * rightSize, 3 * rightSize);
-      p.curveVertex(10 * rightSize, 0);
-      p.curveVertex(9 * rightSize, -3 * rightSize);
-      p.curveVertex(6 * rightSize, -4 * rightSize);
-      p.curveVertex(centerX, centerY);
-      p.curveVertex(-6  * leftSize, 4 * leftSize);
-      p.curveVertex(-9  * leftSize, 3  * leftSize);
-      p.curveVertex(-10  * leftSize, 0);
-      p.curveVertex(-9  * leftSize, -3 * leftSize);
-      p.curveVertex(-6  * leftSize, -4 * leftSize);
-      p.curveVertex(centerX, centerY);
-      p.endShape(p.CLOSE);
-    };
-
-    p.leaf = (size) => {
-      const colours = ShuffleArray(p.colourPalette);
-      let count = 0;
-      while (count < size / 2) {
-        let colour = p.lerpColor(p.color(colours[0]), p.color(colours[colours.length - 1]), (1 / size) * count * 4)
-        p.fill(colour);
-        p.stroke(colour);
-        p.ellipse(count, count, size - (count * 2), size - (count * 2), 20, 20, 20, 20);
-        count++;
-      }
     };
 
     p.trippleHex = (size) => {
